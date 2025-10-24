@@ -47,4 +47,63 @@ points = [
 #     print(p)
 
 # print(points.__len__())
-print(points[-1])
+# print(points[-1])
+
+# Read Excel file: skip first 5 rows, read 4 columns as strings
+df2 = pd.read_excel(
+    file_path,
+    sheet_name="GPS Data",
+    skiprows=4,
+    usecols="F:I",
+    names=["Station_km", "Latitude", "Longitude", "Altitude"],
+    dtype=str,
+)
+
+df1_last_value = points[-1]
+
+# Drop any completely empty rows
+df2 = df2.dropna(how="all")
+
+points_2 = [
+    GpsPoint(row["Station_km"], row["Latitude"], row["Longitude"], row["Altitude"])
+    for _, row in df2.iterrows()
+]
+
+for p in points_2:
+    p.station_km += df1_last_value.station_km
+    points.append(p)
+
+# print(points.__len__())
+# print(points[14930])  # last from df1
+# print(points[14931])  # first from df2
+
+
+# Read Excel file: skip first 5 rows, read 4 columns as strings
+df3 = pd.read_excel(
+    file_path,
+    sheet_name="GPS Data",
+    skiprows=4,
+    usecols="K:N",
+    names=["Station_km", "Latitude", "Longitude", "Altitude"],
+    dtype=str,
+)
+
+df2_last_value = points[-1]
+
+# Drop any completely empty rows
+df3 = df3.dropna(how="all")
+
+points_3 = [
+    GpsPoint(row["Station_km"], row["Latitude"], row["Longitude"], row["Altitude"])
+    for _, row in df3.iterrows()
+]
+
+for p in points_3:
+    p.station_km += df2_last_value.station_km
+    points.append(p)
+
+print(points.__len__())
+# print(points[14930])  # last from df1
+# print(points[14931])  # first from df2
+# print(points[20811])  # last from df2
+# print(points[20812])  # first from df2
