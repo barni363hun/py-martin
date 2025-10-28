@@ -1,5 +1,8 @@
-kiadott parancsok:
+commands:
 
-python -m venv venv
-.\venv\Scripts\activate
-pip install pandas openpyxl
+- python -m venv venv
+- .\venv\Scripts\activate
+
+
+- pip install pandas openpyxl 
+- pip install reportlab matplotlib

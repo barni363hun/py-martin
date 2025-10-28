@@ -8,6 +8,7 @@ file_path = "vamosszabadi_atlag10m.xlsx"
 # # Get all available sheet names
 # sheet_names = pd.ExcelFile(file_path).sheet_names
 # print(sheet_names)
+# ['Rutting (RSP)', 'Mean Profile Depth', 'GPS Data', 'IRI (RSP)']
 
 # Read Excel file: skip first 5 rows, read 4 columns as strings
 df1 = pd.read_excel(
