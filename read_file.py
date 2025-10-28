@@ -40,7 +40,7 @@ class GpsData:
     def __repr__(self):
         return f"GpsPoint(km={self.station_km}, lat={self.latitude}, lon={self.longitude}, alt={self.altitude})"
 
-"""
+r"""
 Rutting (RSP)								
 Kilometres								
 From	To	Left	Center	Right	Left Max	Center Max	Right Max	Average Left\Right
@@ -70,7 +70,7 @@ class RuttingData:
     def __repr__(self):
         return f"RuttingData(from={self.from_km}, to={self.to_km}, left={self.left}, center={self.center}, right={self.right}, left_max={self.left_max}, center_max={self.center_max}, right_max={self.right_max}, avg_lr={self.avg_lr})"
 
-"""
+r"""
 Mean Profile Depth				
 Kilometres				
 From	To	Left	Right	Average Left\Right
@@ -96,7 +96,7 @@ class MPDData:
     def __repr__(self):
         return f"MPDData(from={self.from_km}, to={self.to_km}, left={self.left}, right={self.right}, avg_lr={self.avg_lr})"
 
-"""
+r"""
 IRI (RSP)					
 Kilometres					
 From	To	Left	Center	Right	Average Left\Right
@@ -147,4 +147,92 @@ for cols in ["A:D", "F:I", "K:N"]:
     points.extend(new_points)
     offset = points[-1].station_km  # update for next block
 
-print(len(points))
+print(f"Loaded {len(points)} GPS Data measurements")
+
+
+def read_data(sheet, data_class, columns, column_names, skip_rows=4):
+    """Generic function to read Excel data and convert to specified class instances.
+    
+    Args:
+        sheet_name (str): Name of the Excel sheet to read
+        data_class (class): Class to instantiate for each row
+        columns (str): Excel column range (e.g. "A:D")
+        column_names (list): List of column names to use
+        skip_rows (int): Number of header rows to skip
+    """
+    df = pd.read_excel(
+        file_path,
+        sheet_name=sheet,
+        skiprows=skip_rows,
+        usecols=columns,
+        names=column_names,
+        dtype=str,
+    ).dropna(how="all")
+    
+    return [data_class(*row) for row in df.to_numpy()]
+
+def read_data_blocks(sheet, data_class, base_columns, column_names, skip_rows=4):
+    """Reads multiple blocks of data from shifted column ranges.
+    
+    Args:
+        sheet (str): Name of the Excel sheet to read
+        data_class (class): Class to instantiate for each row
+        base_columns (list): List of base column ranges (e.g. ["A:I", "K:S", "U:AC"])
+        column_names (list): List of column names to use
+        skip_rows (int): Number of header rows to skip
+    """
+    all_data = []
+    
+    for cols in base_columns:
+        df = pd.read_excel(
+            file_path,
+            sheet_name=sheet,
+            skiprows=skip_rows,
+            usecols=cols,
+            names=column_names,
+            dtype=str,
+        ).dropna(how="all")
+        
+        block_data = [data_class(*row) for row in df.to_numpy()]
+        all_data.extend(block_data)
+    
+    return all_data
+
+# Define the configuration for each data type
+DATA_CONFIGS = {
+    "rutting": {
+        "sheet": "Rutting (RSP)",
+        "data_class": RuttingData,
+        "base_columns": ["A:I", "K:S", "U:AC"],  # Adjust these ranges based on your Excel structure
+        "column_names": ["From_km", "To_km", "Left", "Center", "Right", 
+                        "Left_Max", "Center_Max", "Right_Max", "Avg_LR"]
+    },
+    "mpd": {
+        "sheet": "Mean Profile Depth",
+        "data_class": MPDData,
+        "base_columns": ["A:E", "G:K", "M:Q"],  # Adjust these ranges based on your Excel structure
+        "column_names": ["From_km", "To_km", "Left", "Right", "Avg_LR"]
+    },
+    "iri": {
+        "sheet": "IRI (RSP)",
+        "data_class": IRIData,
+        "base_columns": ["A:F", "H:M", "O:T"],  # Adjust these ranges based on your Excel structure
+        "column_names": ["From_km", "To_km", "Left", "Center", "Right", "Avg_LR"]
+    }
+}
+
+# Read all data types using the updated function
+data = {
+    data_type: read_data_blocks(**config)
+    for data_type, config in DATA_CONFIGS.items()
+}
+
+# Example usage:
+print(f"Loaded {len(data['rutting'])} rutting measurements")
+print(f"Loaded {len(data['mpd'])} MPD measurements")
+print(f"Loaded {len(data['iri'])} IRI measurements")
+
+# Example: print first entry of each type
+for data_type, measurements in data.items():
+    if measurements:
+        print(f"\nFirst {data_type} data:", measurements[0])
